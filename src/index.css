@@ -1,0 +1,43 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit", sans-serif;
+
+  --color-primary: #2D5A27; /* Forest Green */
+  --color-primary-light: #4A833D;
+  --color-secondary: #8DBE3E; /* Fresh Lime */
+  --color-accent: #E97132; /* Carrot Orange */
+  --color-warm: #F9B233; /* Sunny Yellow */
+  --color-earth: #4D3D2D; /* Soil Brown */
+  --color-background: #FAFAF8;
+
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+}
+
+@layer base {
+  body {
+    @apply bg-background text-earth font-sans antialiased;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display font-semibold tracking-tight;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply px-6 py-3 bg-primary text-white rounded-full font-medium transition-all hover:bg-primary-light hover:scale-105 active:scale-95 shadow-md;
+  }
+  
+  .btn-outline {
+    @apply px-6 py-3 border-2 border-primary text-primary rounded-full font-medium transition-all hover:bg-primary hover:text-white;
+  }
+
+  .card {
+    @apply bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.04)] border border-black/5 overflow-hidden;
+  }
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;600;700&display=swap');
