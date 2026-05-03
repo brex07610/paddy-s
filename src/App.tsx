@@ -24,26 +24,59 @@ import {
   ShieldCheck, 
   MessageCircle,
   ArrowLeft,
-  Check
+  Check,
+  Languages,
+  BookOpen,
+  CloudRain,
+  DollarSign,
+  Users,
+  Award,
+  Calendar,
+  Zap,
+  Mic,
+  FileText,
+  HelpCircle,
+  LogOut,
+  User,
+  ExternalLink,
+  ChevronDown
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Product, CartItem, View, OrderDetails } from './types';
-import { PRODUCTS, CATEGORIES } from './constants';
+import { 
+  Language, 
+  View, 
+  Listing, 
+  InputProduct, 
+  Guide, 
+  WeatherData, 
+  FarmerProfile 
+} from './types';
+import { LISTINGS, INPUTS, GUIDES, PROVINCES } from './constants';
 
 // --- Shared Components ---
 
+const AnnouncementBar = () => (
+  <div className="bg-secondary text-primary text-center py-2 text-xs font-bold uppercase tracking-widest px-4">
+    <span className="flex items-center justify-center gap-2">
+      <CloudRain size={14} /> 🌧 Seasonal planting guide for 2026 now available
+    </span>
+  </div>
+);
+
 const Navbar = ({ 
-  cartCount, 
+  currentView, 
   setView, 
-  toggleCart, 
-  currentView,
-  lastAdded
+  lang, 
+  setLang,
+  isLoggedIn,
+  onJoin
 }: { 
-  cartCount: number, 
-  setView: (v: View) => void, 
-  toggleCart: () => void,
-  currentView: View,
-  lastAdded: string | null
+  currentView: View, 
+  setView: (v: View) => void,
+  lang: Language,
+  setLang: (l: Language) => void,
+  isLoggedIn: boolean,
+  onJoin: () => void
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -54,784 +87,271 @@ const Navbar = ({
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const navLinks: { label: string, view: View }[] = [
-    { label: 'Home', view: 'home' },
-    { label: 'Shop', view: 'shop' },
-    { label: 'Seasonal Specials', view: 'specials' },
-    { label: 'About Us', view: 'about' },
+  const navLinks: { label: string, view: View, icon: any }[] = [
+    { label: 'Home', view: 'home', icon: Leaf },
+    { label: 'Marketplace', view: 'marketplace', icon: ShoppingBasket },
+    { label: 'Inputs', view: 'shop', icon: Zap },
+    { label: 'Knowledge', view: 'knowledge', icon: BookOpen },
+    { label: 'Weather', view: 'weather', icon: CloudRain },
+    { label: 'Finance', view: 'finance', icon: DollarSign },
   ];
 
   return (
-    <>
-      <div className="bg-primary text-white text-center py-2 text-sm font-medium">
-        <span className="opacity-90">Free delivery on orders over $50! 🍏 Order by 2pm for same-day delivery.</span>
-      </div>
-      <nav 
-        className={`sticky top-0 z-50 w-full transition-all duration-300 ${
-          isScrolled ? 'bg-white shadow-md py-3' : 'bg-background/80 backdrop-blur-md py-5'
-        }`}
-      >
-        <div className="max-w-7xl mx-auto px-4 md:px-8 flex items-center justify-between">
-          <div 
-            className="flex items-center gap-2 cursor-pointer group"
-            onClick={() => setView('home')}
-          >
-            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white group-hover:rotate-12 transition-transform">
-              <Leaf size={24} fill="currentColor" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-xl font-display font-bold text-primary leading-tight">Paddy's</span>
-              <span className="text-[10px] uppercase tracking-widest font-semibold text-earth/60 leading-none">Fruit & Veg</span>
-            </div>
+    <header className={`sticky top-0 z-50 w-full transition-all duration-300 ${isScrolled ? 'bg-white shadow-xl py-3' : 'bg-background/80 backdrop-blur-md py-4'}`}>
+      <div className="max-w-7xl mx-auto px-4 md:px-8 flex items-center justify-between">
+        <div 
+          className="flex items-center gap-2.5 cursor-pointer group"
+          onClick={() => setView('home')}
+        >
+          <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-secondary group-hover:rotate-12 transition-transform shadow-lg shadow-primary/20">
+            <Award size={24} strokeWidth={2.5} />
           </div>
+          <div className="flex flex-col">
+            <span className="text-2xl font-display font-bold text-primary leading-tight tracking-tight">AgriZim</span>
+            <span className="text-[9px] uppercase tracking-[0.2em] font-bold text-accent leading-none">Empowering Farmers</span>
+          </div>
+        </div>
 
-          <div className="hidden lg:flex items-center gap-8">
-            {navLinks.map((link) => (
-              <button 
-                key={link.label}
-                onClick={() => setView(link.view)}
-                className={`text-sm font-medium transition-colors hover:text-primary ${
-                  currentView === link.view ? 'text-primary' : 'text-earth'
-                }`}
+        {/* Desktop Nav */}
+        <div className="hidden lg:flex items-center gap-6">
+          {navLinks.map((link) => (
+            <button 
+              key={link.label}
+              onClick={() => { setView(link.view); setIsMobileMenuOpen(false); }}
+              className={`text-sm font-bold transition-all px-3 py-2 rounded-lg flex items-center gap-2 hover:bg-primary/5 ${
+                currentView === link.view ? 'text-primary bg-primary/5' : 'text-earth/60'
+              }`}
+            >
+              <link.icon size={16} />
+              {link.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-4">
+          <div className="hidden sm:flex items-center gap-1 bg-primary/5 rounded-full p-1 border border-primary/10">
+            {(['EN', 'SN', 'ND'] as Language[]).map(l => (
+              <button
+                key={l}
+                onClick={() => setLang(l)}
+                className={`w-8 h-8 rounded-full text-[10px] font-bold transition-all ${lang === l ? 'bg-primary text-white shadow-md' : 'text-primary/40 hover:text-primary'}`}
               >
-                {link.label}
+                {l}
               </button>
             ))}
           </div>
 
-          <div className="flex items-center gap-2 md:gap-5">
-            <div className="hidden sm:flex items-center gap-2 text-earth/70 text-sm">
-              <Phone size={16} />
-              <span className="font-medium">0800 PADDY</span>
-            </div>
-            
-            <div className="relative">
-              <button 
-                onClick={toggleCart}
-                className="relative p-2.5 bg-white rounded-full text-earth shadow-sm border border-black/5 hover:bg-primary hover:text-white transition-all group"
-              >
-                <ShoppingBasket size={22} />
-                <AnimatePresence>
-                  {cartCount > 0 && (
-                    <motion.span 
-                      key={cartCount}
-                      initial={{ scale: 0.5, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      className="absolute -top-1 -right-1 w-5 h-5 bg-accent text-[10px] font-bold text-white rounded-full flex items-center justify-center border-2 border-white ring-1 ring-accent"
-                    >
-                      {cartCount}
-                    </motion.span>
-                  )}
-                </AnimatePresence>
-              </button>
-
-              <AnimatePresence>
-                {lastAdded && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10, scale: 0.8 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -10, scale: 0.8 }}
-                    className="absolute top-14 right-0 bg-white border border-black/5 shadow-2xl rounded-2xl py-3 px-4 flex items-center gap-3 whitespace-nowrap z-50 pointer-events-none"
-                  >
-                    <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-primary">
-                      <Check size={16} strokeWidth={3} />
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-earth leading-none mb-0.5">Added to Basket</p>
-                      <p className="text-[10px] text-earth/40 italic">{lastAdded}</p>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
+          {!isLoggedIn ? (
             <button 
-              className="lg:hidden p-2 text-earth"
-              onClick={() => setIsMobileMenuOpen(true)}
+              onClick={onJoin}
+              className="bg-primary text-white px-5 py-2.5 rounded-full text-sm font-bold shadow-lg hover:bg-primary-light transition-all active:scale-95"
             >
-              <Menu size={24} />
+              Join Free
             </button>
-          </div>
+          ) : (
+            <button 
+              onClick={() => setView('profile')}
+              className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center text-primary border border-primary/20 hover:bg-primary/20 transition-all"
+            >
+              <User size={20} />
+            </button>
+          )}
+
+          <button 
+            className="lg:hidden p-2 text-primary"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
+            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
         </div>
-      </nav>
+      </div>
 
       {/* Mobile Menu */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div 
-            initial={{ opacity: 0, x: '100%' }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: '100%' }}
-            className="fixed inset-0 z-[60] bg-white flex flex-col p-6"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="lg:hidden bg-white border-t border-black/5 overflow-hidden"
           >
-            <div className="flex justify-between items-center mb-10">
-              <div className="flex items-center gap-2">
-                <Leaf className="text-primary" />
-                <span className="text-xl font-bold font-display">Paddy's</span>
-              </div>
-              <button 
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="p-2 bg-background rounded-full"
-              >
-                <X size={24} />
-              </button>
-            </div>
-            <div className="flex flex-col gap-6">
+            <div className="p-6 space-y-4">
               {navLinks.map((link) => (
                 <button 
                   key={link.label}
-                  onClick={() => {
-                    setView(link.view);
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="text-2xl font-display font-medium text-left px-2"
+                  onClick={() => { setView(link.view); setIsMobileMenuOpen(false); }}
+                  className={`w-full flex items-center gap-4 p-4 rounded-2xl text-left font-bold ${
+                    currentView === link.view ? 'bg-primary text-white shadow-lg' : 'bg-primary/5 text-primary'
+                  }`}
                 >
-                  {link.label}
+                  <link.icon size={20} />
+                  <span>{link.label}</span>
+                  <ChevronRight size={16} className="ml-auto opacity-50" />
                 </button>
               ))}
-              <div className="mt-auto flex flex-col gap-4 border-t pt-8 text-earth/60">
-                <div className="flex items-center gap-3">
-                  <Phone size={20} />
-                  <span>Call us: 0800 PADDY</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <MapPin size={20} />
-                  <span>123 Harvest Road, Freshville</span>
-                </div>
+              <div className="pt-4 flex justify-center gap-4">
+                {(['EN', 'SN', 'ND'] as Language[]).map(l => (
+                  <button
+                    key={l}
+                    onClick={() => setLang(l)}
+                    className={`px-4 py-2 rounded-full text-xs font-bold ${lang === l ? 'bg-primary text-white' : 'bg-primary/5 text-primary'}`}
+                  >
+                    {l === 'EN' ? 'English' : l === 'SN' ? 'Shona' : 'Ndebele'}
+                  </button>
+                ))}
               </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-    </>
+    </header>
   );
 };
 
-const ProductCard = ({ 
-  product, 
-  onAddToCart, 
-  onViewDetails 
-}: { 
-  product: Product, 
-  onAddToCart: (p: Product) => void,
-  onViewDetails: (p: Product) => void
-}) => {
-  const [isAdded, setIsAdded] = useState(false);
+// --- Home View ---
 
-  const handleAdd = () => {
-    onAddToCart(product);
-    setIsAdded(true);
-    setTimeout(() => setIsAdded(false), 2000);
-  };
-
-  return (
-    <motion.div 
-      layout
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="card group flex flex-col h-full"
-    >
-      <div 
-        className="relative aspect-[4/5] overflow-hidden cursor-pointer"
-        onClick={() => onViewDetails(product)}
-      >
-        <img 
-          src={product.image} 
-          alt={product.name}
-          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-        />
-        {product.badge && (
-          <span className="absolute top-4 left-4 bg-accent text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
-            {product.badge}
-          </span>
-        )}
-        <button className="absolute top-4 right-4 p-2 bg-white/80 backdrop-blur-sm rounded-full text-earth/40 hover:text-accent transition-colors">
-          <Heart size={18} />
-        </button>
-      </div>
-      
-      <div className="p-5 flex-grow flex flex-col">
-        <div className="flex items-center gap-1 text-primary mb-1">
-          <Star size={12} fill="currentColor" />
-          <span className="text-[10px] font-bold uppercase tracking-wider">Top Quality</span>
-        </div>
-        <h3 className="text-lg font-display mb-1 text-earth group-hover:text-primary transition-colors line-clamp-1">
-          {product.name}
-        </h3>
-        <p className="text-sm text-earth/60 mb-4 line-clamp-2">
-          {product.description}
-        </p>
-        
-        <div className="mt-auto flex items-end justify-between">
-          <div>
-            <span className="text-2xl font-display font-bold text-earth">${product.price.toFixed(2)}</span>
-            <span className="text-xs text-earth/40 ml-1">/ {product.unit}</span>
-          </div>
-          <button 
-            onClick={handleAdd}
-            className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all shadow-md active:scale-95 ${
-              isAdded ? 'bg-secondary text-primary' : 'bg-primary text-white hover:bg-primary-light'
-            }`}
-          >
-            <AnimatePresence mode="wait">
-              {isAdded ? (
-                <motion.div
-                  key="check"
-                  initial={{ scale: 0, rotate: -45 }}
-                  animate={{ scale: 1, rotate: 0 }}
-                  exit={{ scale: 0 }}
-                >
-                  <Check size={20} strokeWidth={3} />
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="plus"
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  exit={{ scale: 0 }}
-                >
-                  <Plus size={20} />
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </button>
-        </div>
-      </div>
-    </motion.div>
-  );
-};
-
-const CartDrawer = ({ 
-  isOpen, 
-  onClose, 
-  items, 
-  onUpdateQuantity, 
-  onRemove,
-  onCheckout
-}: { 
-  isOpen: boolean, 
-  onClose: () => void, 
-  items: CartItem[],
-  onUpdateQuantity: (id: string, delta: number) => void,
-  onRemove: (id: string) => void,
-  onCheckout: () => void
-}) => {
-  const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
-  return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm"
-          />
-          <motion.div 
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed top-0 right-0 h-full w-full max-w-md z-[101] bg-white shadow-2xl flex flex-col"
-          >
-            <div className="p-6 border-b flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-display font-bold">Your Basket</h2>
-                <p className="text-sm text-earth/40">{items.length} items selected</p>
-              </div>
-              <button onClick={onClose} className="p-2 hover:bg-background rounded-full">
-                <X size={24} />
-              </button>
-            </div>
-
-            <div className="flex-grow overflow-y-auto p-6 space-y-6">
-              {items.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-center">
-                  <div className="w-20 h-20 bg-background rounded-full flex items-center justify-center mb-4">
-                    <ShoppingBasket size={32} className="text-earth/20" />
-                  </div>
-                  <h3 className="text-lg font-medium opacity-60">Your basket is empty</h3>
-                  <p className="text-sm text-earth/40 mt-2">Time to add some fresh goodies!</p>
-                  <button 
-                    onClick={onClose}
-                    className="mt-6 text-primary font-bold flex items-center gap-2 hover:underline"
-                  >
-                    Continue Shopping <ArrowRight size={16} />
-                  </button>
-                </div>
-              ) : (
-                items.map((item) => (
-                  <div key={item.id} className="flex gap-4 group">
-                    <div className="w-20 h-20 bg-background rounded-xl overflow-hidden flex-shrink-0">
-                      <img src={item.image} className="w-full h-full object-cover" alt={item.name} />
-                    </div>
-                    <div className="flex-grow">
-                      <div className="flex justify-between">
-                        <h4 className="font-display font-medium text-earth">{item.name}</h4>
-                        <button 
-                          onClick={() => onRemove(item.id)}
-                          className="text-earth/20 hover:text-accent transition-colors"
-                        >
-                          <X size={16} />
-                        </button>
-                      </div>
-                      <p className="text-xs text-earth/40 mb-2">${item.price.toFixed(2)} / {item.unit}</p>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1 bg-background rounded-lg p-0.5 border">
-                          <button 
-                            onClick={() => onUpdateQuantity(item.id, -1)}
-                            className="p-1 hover:bg-white rounded-md text-earth/60 disabled:opacity-20"
-                            disabled={item.quantity <= 1}
-                          >
-                            <Minus size={14} />
-                          </button>
-                          <span className="w-8 text-center text-sm font-bold">{item.quantity}</span>
-                          <button 
-                            onClick={() => onUpdateQuantity(item.id, 1)}
-                            className="p-1 hover:bg-white rounded-md text-earth/60"
-                          >
-                            <Plus size={14} />
-                          </button>
-                        </div>
-                        <span className="font-bold text-primary">${(item.price * item.quantity).toFixed(2)}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-
-            {items.length > 0 && (
-              <div className="p-6 border-t bg-background/30">
-                <div className="space-y-2 mb-6 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-earth/60">Subtotal</span>
-                    <span className="font-medium">${total.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-earth/60">Delivery</span>
-                    <span className="text-primary font-bold">{total >= 50 ? 'FREE' : '$5.00'}</span>
-                  </div>
-                  <div className="flex justify-between text-lg font-display font-bold pt-2 border-t mt-2">
-                    <span>Total</span>
-                    <span className="text-primary">${(total >= 50 ? total : total + 5).toFixed(2)}</span>
-                  </div>
-                </div>
-                <button 
-                  onClick={onCheckout}
-                  className="w-full btn-primary py-4 flex items-center justify-center gap-3"
-                >
-                  <ShieldCheck size={20} /> Checkout Now
-                </button>
-              </div>
-            )}
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
-  );
-};
-
-// --- View Components ---
-
-const SpecialsView = ({ onAddToCart }: { onAddToCart: (p: Product) => void }) => {
-  const [isBoxAdded, setIsBoxAdded] = useState(false);
-  const specials = PRODUCTS.filter(p => p.category === 'Seasonal' || p.badge?.includes('Special'));
-  
-  const handleBoxAdd = () => {
-    const box = PRODUCTS.find(p => p.id === '3');
-    if (box) {
-      onAddToCart(box);
-      setIsBoxAdded(true);
-      setTimeout(() => setIsBoxAdded(false), 2000);
-    }
-  };
-
-  return (
-    <div className="space-y-24 pb-20">
-      {/* Specials Hero */}
-      <section className="relative h-[60vh] flex items-center">
-        <div className="absolute inset-0 z-0 overflow-hidden rounded-[3rem] mx-4 md:mx-8">
-           <img 
-             src="https://images.unsplash.com/photo-1595855759920-86582396756a?w=1600&q=80" 
-             className="w-full h-full object-cover brightness-50"
-             alt="Specials Background"
-           />
-           <div className="absolute inset-0 bg-gradient-to-t from-earth to-transparent opacity-60" />
-        </div>
-        <div className="max-w-7xl mx-auto px-12 relative z-10 text-white text-center">
-           <span className="inline-block px-4 py-1.5 bg-accent text-white font-bold text-xs uppercase tracking-widest rounded-full mb-6">
-             Limited Time Offers
-           </span>
-           <h1 className="text-5xl md:text-7xl font-display font-bold mb-6">Seasonal <span className="text-secondary italic">Treasures</span></h1>
-           <p className="text-xl text-white/80 max-w-2xl mx-auto mb-10">
-             The freshest picks of the week, bundled for value and maximum freshness. 
-             Order before they're gone!
-           </p>
-           <div className="flex items-center justify-center gap-4 text-sm font-bold">
-             <div className="flex items-center gap-2">
-               <Clock size={18} className="text-secondary" />
-               <span>Ends in 2d 14h 32m</span>
-             </div>
-           </div>
-        </div>
-      </section>
-
-      {/* Specials Grid */}
-      <section className="max-w-7xl mx-auto px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
-            {specials.map(product => (
-              <ProductCard 
-                key={product.id} 
-                product={product} 
-                onAddToCart={onAddToCart}
-                onViewDetails={(p) => {}} 
-              />
-            ))}
-           {/* Bundle Box Special */}
-           <div className="lg:col-span-2 card bg-primary text-white p-12 relative overflow-hidden flex flex-col md:flex-row items-center gap-12">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-secondary/10 blur-[100px] rounded-full" />
-              <div className="w-full md:w-1/2 relative z-10">
-                 <span className="text-secondary uppercase tracking-widest font-bold text-xs mb-4 block">Best Seller Bundle</span>
-                 <h2 className="text-4xl font-display font-bold mb-6 italic">The Weekly Harvest Box</h2>
-                 <p className="text-white/70 mb-8 leading-relaxed">
-                   Carefully curated by Paddy himself, this box includes 12 seasonal staples—enough for a family of four. 
-                   Save 20% compared to individual items.
-                 </p>
-                 <div className="flex items-center gap-6 mb-8">
-                    <span className="text-4xl font-display font-bold">$45.00</span>
-                    <span className="text-lg line-through opacity-40">$58.00</span>
-                 </div>
-                 <button 
-                   onClick={handleBoxAdd}
-                   className={`px-10 py-4 rounded-full font-bold shadow-xl transition-all flex items-center gap-2 ${
-                     isBoxAdded ? 'bg-secondary text-primary' : 'bg-white text-primary hover:bg-secondary'
-                   }`}
-                 >
-                   {isBoxAdded ? (
-                     <>
-                       <Check size={20} /> Added to Basket
-                     </>
-                   ) : (
-                     'Grab the Box'
-                   )}
-                 </button>
-              </div>
-              <div className="w-full md:w-1/2 aspect-square rounded-3xl overflow-hidden shadow-2xl relative z-10">
-                 <img src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&q=80" className="w-full h-full object-cover" />
-              </div>
-           </div>
-        </div>
-      </section>
-    </div>
-  );
-};
-
-const AboutView = ({ setView }: { setView: (v: View) => void }) => {
-  return (
-    <div className="pb-20">
-      {/* Story Hero */}
-      <section className="max-w-7xl mx-auto px-8 py-24 grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
-        <div>
-           <span className="text-primary font-bold uppercase tracking-widest text-xs mb-4 block">Our Roots</span>
-           <h1 className="text-5xl md:text-6xl font-display font-bold mb-8 leading-tight">
-             Grown locally. <br />
-             <span className="text-primary italic">Delivered</span> with heart.
-           </h1>
-           <div className="space-y-6 text-earth/70 leading-relaxed text-lg font-light">
-              <p>
-                In 1994, Paddy started with a simple old truck and a mission: to bridge the gap between local fertile farms and the families in our growing community. 
-              </p>
-              <p>
-                What began as a small roadside stall has blossomed into a digital marketplace that stays true to those original values—honesty, quality, and a deep respect for the land.
-              </p>
-              <div className="pt-6 flex items-center gap-4">
-                 <div className="w-16 h-16 rounded-full bg-secondary/20 flex items-center justify-center text-primary">
-                    <Heart size={32} />
-                 </div>
-                 <div>
-                    <h4 className="font-bold text-earth">Family Operated</h4>
-                    <p className="text-sm">Still run by Paddy, his kids, and a small band of local legends.</p>
-                 </div>
-              </div>
-           </div>
-        </div>
-        <div className="relative">
-           <div className="aspect-[3/4] rounded-[3rem] overflow-hidden shadow-2xl">
-              <img src="https://images.unsplash.com/photo-1595113316349-9fa4ee24f884?w=800&q=80" className="w-full h-full object-cover" />
-           </div>
-           <div className="absolute -bottom-10 -left-10 bg-white p-8 rounded-[2rem] shadow-xl border border-black/5 max-w-xs hidden md:block">
-              <p className="text-sm italic font-medium text-earth/60 mb-2">"Quality is never an accident; it is always the result of high intention."</p>
-              <p className="font-display font-bold text-primary">— Paddy, Founder</p>
-           </div>
-        </div>
-      </section>
-
-      {/* Stats / Proof */}
-      <section className="bg-primary text-white py-24 mx-4 md:mx-8 rounded-[3rem]">
-        <div className="max-w-7xl mx-auto px-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 text-center">
-           <div>
-              <h3 className="text-5xl font-display font-bold mb-2">30+</h3>
-              <p className="text-white/40 uppercase tracking-widest text-xs font-bold">Years Harvesting</p>
-           </div>
-           <div>
-              <h3 className="text-5xl font-display font-bold mb-2">15</h3>
-              <p className="text-white/40 uppercase tracking-widest text-xs font-bold">Local Farm Partners</p>
-           </div>
-           <div>
-              <h3 className="text-5xl font-display font-bold mb-2">5k+</h3>
-              <p className="text-white/40 uppercase tracking-widest text-xs font-bold">Happy Families</p>
-           </div>
-           <div>
-              <h3 className="text-5xl font-display font-bold mb-2">0</h3>
-              <p className="text-white/40 uppercase tracking-widest text-xs font-bold">Plastic Waste Goal</p>
-           </div>
-        </div>
-      </section>
-
-      {/* Sourcing Section */}
-      <section className="max-w-7xl mx-auto px-8 py-24">
-         <div className="text-center mb-16">
-            <h2 className="text-4xl font-display font-bold mb-4">Why Families <span className="text-primary italic">Choose Us</span></h2>
-            <p className="text-earth/60 max-w-2xl mx-auto">We don't just sell vegetables; we manage a curated ecosystem of local supply chains.</p>
-         </div>
-         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-            {[
-              { icon: <ShieldCheck size={32} />, title: "Quality Audit", desc: "Every single apple and carrot is inspected by hand before it hits your box." },
-              { icon: <Truck size={32} />, title: "Direct Path", desc: "No middleman warehouses. Your food goes from soil to your door in 24 hours." },
-              { icon: <MapPin size={32} />, title: "100% Local", desc: "We only source from within 100km of our main shop to reduce carbon footprints." }
-            ].map((item, i) => (
-              <div key={i} className="card p-10 flex flex-col items-center text-center space-y-4 hover:border-primary/20 transition-all">
-                 <div className="w-16 h-16 bg-background rounded-2xl flex items-center justify-center text-primary">
-                    {item.icon}
-                 </div>
-                 <h4 className="text-xl font-display font-bold">{item.title}</h4>
-                 <p className="text-sm text-earth/60 leading-relaxed">{item.desc}</p>
-              </div>
-            ))}
-         </div>
-         <div className="mt-20 flex justify-center">
-            <button 
-              onClick={() => setView('shop')}
-              className="btn-primary"
-            >
-              Start Your First Order
-            </button>
-         </div>
-      </section>
-    </div>
-  );
-};
-
-const HomeView = ({ setView, onAddToCart }: { setView: (v: View) => void, onAddToCart: (p: Product) => void }) => {
+const HomeView = ({ setView, lang }: { setView: (v: View) => void, lang: Language }) => {
   return (
     <div className="space-y-24">
       {/* Hero Section */}
-      <section className="relative min-h-[85vh] flex items-center pt-8">
-        <div className="absolute inset-0 z-0 overflow-hidden rounded-[3rem] mx-4 md:mx-8">
+      <section className="relative min-h-[90vh] flex items-center pt-8 overflow-hidden">
+        <div className="absolute inset-0 z-0 scale-105">
           <img 
-            src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=1600&q=80" 
-            className="w-full h-full object-cover brightness-50 contrast-125"
-            alt="Hero Background"
+            src="https://images.unsplash.com/photo-1500382017468-9049fee74a62?w=1600&q=80" 
+            className="w-full h-full object-cover brightness-50"
+            alt="Zimbabwe Farmland"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/60 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-primary/80 via-primary/40 to-transparent" />
         </div>
 
         <div className="max-w-7xl mx-auto px-8 md:px-12 relative z-10 text-white">
           <motion.div 
-            initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="max-w-xl"
+            className="max-w-3xl"
           >
-            <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-secondary text-primary font-bold text-xs uppercase tracking-widest rounded-full mb-6">
-              <Star size={14} fill="currentColor" /> Freshness Guaranteed
-            </span>
-            <h1 className="text-5xl md:text-7xl font-display font-bold leading-[1.1] mb-6">
-              Paddy's Fresh <br />
-              <span className="text-secondary italic">Farm-to-Table</span> <br />
-              Selection.
+            <div className="flex items-center gap-2 mb-6">
+              <span className="px-3 py-1 bg-secondary text-primary font-bold text-[10px] uppercase tracking-widest rounded-full shadow-lg">
+                Verified Platform
+              </span>
+              <span className="w-2 h-2 rounded-full bg-secondary animate-pulse" />
+            </div>
+            
+            <h1 className="text-5xl md:text-8xl font-display font-bold leading-[1] mb-6 tracking-tight">
+              Grow More. <br />
+              <span className="text-secondary">Sell More.</span> <br />
+              Earn More.
             </h1>
-            <p className="text-lg md:text-xl text-white/80 mb-10 leading-relaxed font-light">
-              We bring the best of the local harvest direct to your doorstep. Handpicked with love by our family for yours.
+            
+            <p className="text-xl font-display font-medium text-secondary/80 mb-2">
+              {lang === 'SN' ? 'Rima Zvakanaka. Tengesa Zvakanaka.' : 'Zimbabwe\'s #1 platform for farmers.'}
             </p>
+            
+            <p className="text-lg md:text-xl text-white/70 mb-10 leading-relaxed font-light max-w-2xl">
+              Markets, inputs, weather, and finance in one place. Hand-built for the Zimbabwean farming community.
+            </p>
+            
             <div className="flex flex-col sm:flex-row gap-4">
               <button 
-                onClick={() => setView('shop')}
-                className="bg-white text-primary px-8 py-4 rounded-full font-bold shadow-xl hover:bg-secondary transition-all flex items-center justify-center gap-2 group"
+                onClick={() => setView('register')}
+                className="bg-secondary text-primary px-8 py-4 rounded-full font-bold shadow-2xl shadow-secondary/20 hover:bg-warm transition-all flex items-center justify-center gap-3 group text-lg"
               >
-                Start Shop <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                Join Free as a Farmer <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
               </button>
               <button 
-                onClick={() => setView('about')}
-                className="bg-white/10 backdrop-blur-md border border-white/20 text-white px-8 py-4 rounded-full font-bold hover:bg-white/20 transition-all"
+                onClick={() => setView('marketplace')}
+                className="bg-white/10 backdrop-blur-md border border-white/20 text-white px-8 py-4 rounded-full font-bold hover:bg-white/20 transition-all text-lg"
               >
-                Our Story
+                Browse Marketplace
               </button>
+            </div>
+
+            {/* Trust Bar */}
+            <div className="mt-16 flex flex-wrap items-center gap-8 py-8 border-t border-white/10 opacity-80">
+              <div className="flex flex-col">
+                <span className="text-2xl font-bold text-secondary">10,000+</span>
+                <span className="text-[10px] uppercase tracking-widest font-bold text-white/50">Active Farmers</span>
+              </div>
+              <div className="w-[1px] h-10 bg-white/10 hidden sm:block" />
+              <div className="flex flex-col">
+                <span className="text-2xl font-bold text-secondary">8</span>
+                <span className="text-[10px] uppercase tracking-widest font-bold text-white/50">Provinces</span>
+              </div>
+              <div className="w-[1px] h-10 bg-white/10 hidden sm:block" />
+              <div className="flex flex-col">
+                <span className="text-lg font-bold flex items-center gap-2">
+                  <ShieldCheck size={20} className="text-secondary" /> Trusted by Agritex
+                </span>
+              </div>
             </div>
           </motion.div>
         </div>
-
-        {/* Feature Strip */}
-        <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 w-full max-w-5xl px-4 hidden lg:block">
-          <div className="bg-white rounded-3xl p-8 shadow-2xl flex justify-between gap-8 border border-primary/10">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-secondary/10 rounded-2xl flex items-center justify-center text-primary translate-y-[-2px]">
-                <Truck size={28} />
-              </div>
-              <div>
-                <h4 className="font-display font-bold text-earth leading-tight">Same-Day Delivery</h4>
-                <p className="text-xs text-earth/40">Order by 2pm today</p>
-              </div>
-            </div>
-            <div className="w-[1px] bg-earth/10 flex-shrink-0" />
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-accent/10 rounded-2xl flex items-center justify-center text-accent translate-y-[-2px]">
-                <Leaf size={28} />
-              </div>
-              <div>
-                <h4 className="font-display font-bold text-earth leading-tight">100% Local Farms</h4>
-                <p className="text-xs text-earth/40">Supporting growers</p>
-              </div>
-            </div>
-            <div className="w-[1px] bg-earth/10 flex-shrink-0" />
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center text-primary translate-y-[-2px]">
-                <ShieldCheck size={28} />
-              </div>
-              <div>
-                <h4 className="font-display font-bold text-earth leading-tight">Zero-Waste Promise</h4>
-                <p className="text-xs text-earth/40">Recyclable packaging</p>
-              </div>
-            </div>
-          </div>
-        </div>
       </section>
 
-      {/* Featured Section */}
-      <section className="max-w-7xl mx-auto px-8 pt-12">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
-          <div className="max-w-lg">
-            <h2 className="text-4xl md:text-5xl font-display font-bold mb-4">Today's <span className="text-primary italic">Harvest</span> Specials</h2>
-            <p className="text-earth/60">Grown locally, hand-selected this morning. These are our personal favourites for the kitchen this week.</p>
-          </div>
-          <button 
-            onClick={() => setView('shop')}
-            className="flex items-center gap-2 group font-bold text-primary"
-          >
-            See full shop <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all"><ArrowRight size={14} /></div>
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {PRODUCTS.filter(p => p.featured).map((product) => (
-            <ProductCard 
-              key={product.id} 
-              product={product} 
-              onAddToCart={() => onAddToCart(product)}
-              onViewDetails={(p) => setView('shop')}
-            />
+      {/* Grid Features */}
+      <section className="max-w-7xl mx-auto px-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {[
+            { icon: ShoppingBasket, title: 'Direct Market', desc: 'Sell your harvest to verified buyers across Zim.', color: 'bg-primary' },
+            { icon: Zap, title: 'Quality Inputs', desc: 'Seeds & fertilisers from trusted suppliers.', color: 'bg-secondary' },
+            { icon: CloudRain, title: 'Weather Alerts', desc: 'Localized forecasts and planting advice.', color: 'bg-accent' },
+            { icon: DollarSign, title: 'Agri Finance', desc: 'Seasonal loans and crop insurance.', color: 'bg-primary-light' }
+          ].map((item, idx) => (
+            <motion.div 
+              key={idx}
+              whileHover={{ y: -10 }}
+              className="p-8 bg-white rounded-3xl shadow-xl border border-black/5 group"
+            >
+              <div className={`w-14 h-14 ${item.color} rounded-2xl flex items-center justify-center text-white mb-6 shadow-lg rotate-3 group-hover:rotate-0 transition-transform`}>
+                <item.icon size={28} />
+              </div>
+              <h3 className="text-xl font-bold mb-3">{item.title}</h3>
+              <p className="text-earth/50 text-sm leading-relaxed">{item.desc}</p>
+            </motion.div>
           ))}
         </div>
-      </section>
-      
-      {/* Promo Section */}
-      <section className="max-w-7xl mx-auto px-4 md:px-8">
-         <div className="bg-earth text-white rounded-[2.5rem] p-12 relative overflow-hidden flex flex-col items-center text-center">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 blur-[100px] rounded-full" />
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-accent/20 blur-[100px] rounded-full" />
-            
-            <Leaf className="text-secondary mb-6" size={48} />
-            <h2 className="text-4xl md:text-6xl font-display font-bold mb-6">Want Weekly <span className="text-secondary">Freshness?</span></h2>
-            <p className="text-white/60 text-lg max-w-2xl mb-12">
-              Join 500+ local families receiving our seasonal harvest newsletters. Get exclusive deals and farm updates every Friday.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md">
-              <input 
-                type="email" 
-                placeholder="Enter your email" 
-                className="flex-grow px-6 py-4 bg-white/10 border border-white/20 rounded-full text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-secondary"
-              />
-              <button className="bg-secondary text-primary font-bold px-8 py-4 rounded-full shadow-lg hover:scale-105 transition-all">
-                Join Now
-              </button>
-            </div>
-         </div>
       </section>
     </div>
   );
 };
 
-const ShopView = ({ 
-  onAddToCart, 
-  setView 
-}: { 
-  onAddToCart: (p: Product) => void,
-  setView: (v: View) => void
-}) => {
-  const [activeCategory, setActiveCategory] = useState('All');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState<'price-low' | 'price-high' | 'newest'>('newest');
+// --- Marketplace View ---
 
-  const filteredProducts = useMemo(() => {
-    let result = [...PRODUCTS];
-    if (activeCategory !== 'All') {
-      result = result.filter(p => p.category === activeCategory);
-    }
-    if (searchQuery) {
-      result = result.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
-    }
-    
-    if (sortBy === 'price-low') result.sort((a, b) => a.price - b.price);
-    if (sortBy === 'price-high') result.sort((a, b) => b.price - a.price);
-    
-    return result;
-  }, [activeCategory, searchQuery, sortBy]);
+const MarketplaceView = ({ onPost }: { onPost: () => void }) => {
+  const [activeTab, setActiveTab] = useState('Grains');
+  const cats = ['Grains', 'Vegetables', 'Fruits', 'Livestock', 'Dairy', 'Tobacco', 'Cotton', 'Other'];
 
   return (
     <div className="max-w-7xl mx-auto px-4 md:px-8 py-12">
-      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-10 mb-12">
+      <div className="flex flex-col md:flex-row justify-between items-end gap-6 mb-12">
         <div>
-          <h1 className="text-4xl md:text-5xl font-display font-bold mb-4">The Digital <span className="text-primary italic">Marketplace</span></h1>
-          <p className="text-earth/60">Browse our full range of farm-fresh fruit, vegetables, and curated bundles.</p>
+          <h1 className="text-4xl md:text-5xl font-display font-bold mb-4">Marketplace</h1>
+          <p className="text-earth/60">Zimbabwe's digital produce exchange. Buy direct from the source.</p>
         </div>
-        
-        <div className="flex flex-col sm:flex-row gap-4 flex-grow max-w-2xl">
+        <div className="flex items-center gap-4 w-full md:w-auto">
           <div className="relative flex-grow">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-earth/20" size={20} />
             <input 
               type="text" 
-              placeholder="Search produce..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white border border-black/5 rounded-2xl pl-12 pr-6 py-4 focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+              placeholder="Search produce or provinces..." 
+              className="w-full bg-white border border-black/5 rounded-2xl pl-12 pr-6 py-4 focus:ring-2 focus:ring-primary/20 outline-none"
             />
           </div>
-          <select 
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as any)}
-            className="bg-white border border-black/5 rounded-2xl px-6 py-4 focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm font-medium"
-          >
-            <option value="newest">Newest Arrivals</option>
-            <option value="price-low">Price: Low to High</option>
-            <option value="price-high">Price: High to Low</option>
-          </select>
+          <button className="p-4 bg-primary text-white rounded-2xl hover:scale-105 transition-all shadow-lg">
+            <Mic size={24} />
+          </button>
         </div>
       </div>
 
-      {/* Filter Bar */}
-      <div className="flex items-center gap-3 overflow-x-auto pb-4 mb-8 no-scrollbar">
-        {CATEGORIES.map(cat => (
+      {/* Category Filter */}
+      <div className="flex items-center gap-3 overflow-x-auto pb-4 mb-12 no-scrollbar">
+        {cats.map(cat => (
           <button 
             key={cat}
-            onClick={() => setActiveCategory(cat)}
-            className={`px-6 py-2.5 rounded-full whitespace-nowrap text-sm font-bold transition-all ${
-              activeCategory === cat 
-                ? 'bg-primary text-white shadow-lg' 
-                : 'bg-white text-earth/60 hover:bg-primary/5 border border-black/5'
+            onClick={() => setActiveTab(cat)}
+            className={`px-6 py-3 rounded-full font-bold whitespace-nowrap transition-all border ${
+              activeTab === cat ? 'bg-primary text-white border-primary shadow-lg' : 'bg-white text-earth/60 border-black/5 hover:border-primary/20'
             }`}
           >
             {cat}
@@ -839,382 +359,501 @@ const ShopView = ({
         ))}
       </div>
 
-      {/* Grid */}
+      {/* Listings Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-        <AnimatePresence mode="popLayout">
-          {filteredProducts.length > 0 ? (
-            filteredProducts.map((product) => (
-              <ProductCard 
-                key={product.id} 
-                product={product} 
-                onAddToCart={onAddToCart}
-                onViewDetails={(p) => {}}
-              />
-            ))
-          ) : (
-            <div className="col-span-full py-24 flex flex-col items-center justify-center text-center">
-               <div className="w-20 h-20 bg-background rounded-full flex items-center justify-center mb-6">
-                 <Search size={32} className="text-earth/20" />
-               </div>
-               <h3 className="text-xl font-display font-bold">No items found</h3>
-               <p className="text-earth/40 max-w-xs mt-2">Try adjusting your filters or search query to find what you're looking for.</p>
-               <button 
-                 onClick={() => { setActiveCategory('All'); setSearchQuery(''); }}
-                 className="mt-8 text-primary font-bold hover:underline"
-               >
-                 View All Produce
-               </button>
+        {LISTINGS.map(listing => (
+          <motion.div 
+            layout
+            key={listing.id}
+            className="group card hover:shadow-2xl transition-all"
+          >
+            <div className="relative aspect-[4/3] overflow-hidden">
+              <img src={listing.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+              <div className="absolute top-4 left-4 flex gap-2">
+                <span className="px-3 py-1 bg-white/90 backdrop-blur-md rounded-full text-[10px] font-bold uppercase tracking-wider text-primary">
+                  {listing.province}
+                </span>
+                {listing.verified && (
+                  <div className="w-6 h-6 bg-secondary text-primary rounded-full flex items-center justify-center shadow-lg" title="Verified Farmer">
+                    <ShieldCheck size={14} strokeWidth={3} />
+                  </div>
+                )}
+              </div>
             </div>
-          )}
-        </AnimatePresence>
+            <div className="p-6">
+              <div className="flex justify-between items-start mb-2">
+                <h4 className="text-lg font-bold text-earth leading-tight">{listing.title}</h4>
+                <div className="text-right">
+                  <p className="text-xl font-bold text-primary">${listing.price}</p>
+                  <p className="text-[10px] text-earth/40 font-bold uppercase">per {listing.unit}</p>
+                </div>
+              </div>
+              <p className="text-xs text-earth/60 mb-6 bg-primary/5 p-3 rounded-xl border border-primary/5">
+                <span className="font-bold text-primary">{listing.sellerName}</span> &middot; {listing.quantity} available
+              </p>
+              <div className="flex gap-2">
+                <button className="flex-grow btn-primary py-3 text-xs">Contact Seller</button>
+                <button className="w-12 h-12 flex items-center justify-center border-2 border-primary/10 rounded-full text-primary hover:bg-primary hover:text-white transition-all">
+                  <MessageCircle size={18} />
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        ))}
       </div>
+
+      {/* Mobile Floating CTA */}
+      <button 
+        onClick={onPost}
+        className="fixed bottom-8 right-8 bg-secondary text-primary flex items-center gap-3 px-8 py-5 rounded-full font-bold shadow-2xl hover:scale-110 transition-all z-40 active:scale-95 sm:hidden"
+      >
+        <Plus size={24} strokeWidth={3} />
+        Post Produce
+      </button>
+      <button 
+        onClick={onPost}
+        className="hidden sm:flex fixed bottom-12 right-12 bg-secondary text-primary items-center gap-3 px-10 py-6 rounded-full font-bold shadow-2xl hover:scale-110 transition-all z-40 active:scale-95"
+      >
+        <Plus size={24} strokeWidth={3} />
+        Post Your Produce
+      </button>
     </div>
   );
 };
 
-const CheckoutView = ({ 
-  cart, 
-  onBack, 
-  onNext 
-}: { 
-  cart: CartItem[], 
-  onBack: () => void, 
-  onNext: (order: OrderDetails) => void 
-}) => {
-  const [step, setStep] = useState(1);
-  const [details, setDetails] = useState<OrderDetails>({
-    name: '',
-    address: '',
-    phone: '',
-    deliverySlot: 'morning',
-    paymentMethod: 'mobile-money'
-  });
+// --- Inputs View ---
 
-  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const shipping = total >= 50 ? 0 : 5;
-  const grandTotal = total + shipping;
+const InputsView = () => {
+  const [activeTab, setActiveTab] = useState('Seeds');
+  const tabs = ['Seeds', 'Fertiliser', 'Chemicals', 'Tools', 'Livestock'];
 
   return (
-    <div className="max-w-4xl mx-auto px-4 md:px-8 py-12">
-      <button 
-        onClick={onBack}
-        className="flex items-center gap-2 text-earth/60 mb-8 hover:text-primary transition-colors"
-      >
-        <ArrowLeft size={20} /> Back to Shop
-      </button>
+    <div className="max-w-7xl mx-auto px-4 md:px-8 py-12">
+      <div className="bg-primary text-white rounded-[2.5rem] p-12 mb-16 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-secondary/10 blur-[120px] rounded-full" />
+        <div className="relative z-10">
+          <span className="inline-block px-4 py-1 bg-secondary text-primary font-bold text-xs uppercase tracking-widest rounded-full mb-6">
+            Seasonal Bundle Offer
+          </span>
+          <h2 className="text-4xl md:text-6xl font-display font-bold mb-6">Seeds & Soil <br />Summer Sale</h2>
+          <p className="text-white/70 text-lg max-w-xl mb-12">
+            Buy 10 bags of SC719 and get 2 bags of Compound D at 50% discount. 
+            Free delivery to all Agritex collection points.
+          </p>
+          <button className="bg-white text-primary px-10 py-5 rounded-full font-bold shadow-2xl hover:bg-secondary transition-all">
+            Unlock Discount
+          </button>
+        </div>
+      </div>
 
-      <div className="flex items-center justify-center mb-12 max-w-md mx-auto relative">
-        <div className="flex items-center justify-between w-full relative z-10">
-          {[1, 2, 3].map(s => (
-            <div key={s} className="flex flex-col items-center gap-3">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
-                step >= s ? 'bg-primary text-white shadow-lg' : 'bg-background text-earth/20 border'
-              }`}>
-                {step > s ? <ShieldCheck size={20} /> : <span>{s}</span>}
-              </div>
-              <span className={`text-[10px] font-bold uppercase tracking-widest ${
-                step >= s ? 'text-primary' : 'text-earth/20'
-              }`}>
-                {s === 1 ? 'Details' : s === 2 ? 'Payment' : 'Review'}
-              </span>
-            </div>
+      <div className="flex flex-col md:flex-row justify-between items-center gap-8 mb-12">
+        <div className="flex items-center gap-3 bg-white p-2 rounded-2xl shadow-sm border border-black/5 overflow-x-auto no-scrollbar w-full md:w-auto">
+          {tabs.map(tab => (
+            <button 
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-6 py-3 rounded-xl font-bold transition-all text-sm whitespace-nowrap ${
+                activeTab === tab ? 'bg-primary text-white shadow-lg' : 'text-earth/60 hover:text-primary'
+              }`}
+            >
+              {tab}
+            </button>
           ))}
         </div>
-        <div className="absolute top-5 left-0 w-full h-[2px] bg-background -z-0">
-          <div className="h-full bg-primary transition-all duration-500" style={{ width: `${(step-1)*50}%` }} />
+        <div className="flex items-center gap-4 text-sm font-bold text-earth/40 uppercase tracking-widest bg-primary/5 px-6 py-3 rounded-full border border-primary/10">
+          <Truck size={16} className="text-primary" /> Delivery Estimate: 3-5 Days
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-        {/* Forms */}
-        <div className="space-y-8">
-          {step === 1 && (
-            <div className="space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        {INPUTS.map(item => (
+          <div key={item.id} className="card group hover:shadow-2xl transition-all">
+             <div className="relative aspect-square overflow-hidden bg-background">
+                <img src={item.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                {item.recommended && (
+                  <div className="absolute top-4 left-4 bg-secondary text-primary px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 shadow-lg">
+                    <Check size={14} strokeWidth={3} /> Agritex Recommended
+                  </div>
+                )}
+                {item.stock < 100 && (
+                  <div className="absolute top-4 right-4 bg-accent text-white px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-lg">
+                    Low Stock
+                  </div>
+                )}
+             </div>
+             <div className="p-6">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-earth/40 mb-1">{item.brand}</p>
+                <h4 className="text-xl font-bold mb-4">{item.name}</h4>
+                <div className="flex items-baseline gap-2 mb-6">
+                   <span className="text-2xl font-bold text-primary">${item.price}</span>
+                   <span className="text-xs text-earth/40 font-medium">/{item.unit}</span>
+                </div>
+                <button className="w-full btn-primary py-4 flex items-center justify-center gap-2 group">
+                  <Plus size={20} className="group-hover:rotate-90 transition-transform" /> Add to Order
+                </button>
+             </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// --- Weather View ---
+
+const WeatherView = () => {
+  const [province, setProvince] = useState('Harare');
+  
+  return (
+    <div className="max-w-7xl mx-auto px-4 md:px-8 py-12">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+        <div className="lg:col-span-2 space-y-12">
+          {/* Main Weather Card */}
+          <div className="bg-gradient-to-br from-primary to-primary-light text-white rounded-[2.5rem] p-10 shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-secondary/20 blur-[100px] rounded-full" />
+            
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 relative z-10">
                <div>
-                  <h2 className="text-2xl font-display font-bold mb-6">Delivery Details</h2>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                       <label className="text-xs font-bold uppercase text-earth/40">Full Name</label>
-                       <input 
-                         type="text" 
-                         className="w-full bg-white border border-black/5 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 outline-none" 
-                         placeholder="John Doe"
-                         value={details.name}
-                         onChange={e => setDetails({...details, name: e.target.value})}
-                       />
-                    </div>
-                    <div className="space-y-2">
-                       <label className="text-xs font-bold uppercase text-earth/40">Delivery Address</label>
-                       <textarea 
-                         className="w-full bg-white border border-black/5 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 outline-none min-h-[100px]" 
-                         placeholder="Street, Suburb, Postcode"
-                         value={details.address}
-                         onChange={e => setDetails({...details, address: e.target.value})}
-                       />
-                    </div>
-                    <div className="space-y-2">
-                       <label className="text-xs font-bold uppercase text-earth/40">Phone Number</label>
-                       <input 
-                         type="tel" 
-                         className="w-full bg-white border border-black/5 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 outline-none" 
-                         placeholder="0800 PADDY"
-                         value={details.phone}
-                         onChange={e => setDetails({...details, phone: e.target.value})}
-                       />
-                    </div>
-                    <div className="space-y-2">
-                       <label className="text-xs font-bold uppercase text-earth/40">Preferred Delivery Slot</label>
-                       <div className="grid grid-cols-2 gap-3">
-                         <button 
-                           onClick={() => setDetails({...details, deliverySlot: 'morning'})}
-                           className={`p-4 rounded-xl border font-bold text-sm transition-all ${
-                             details.deliverySlot === 'morning' ? 'border-primary bg-primary/5 text-primary' : 'border-black/5 text-earth/40'
-                           }`}
-                         >
-                           Morning (8am—12pm)
-                         </button>
-                         <button 
-                           onClick={() => setDetails({...details, deliverySlot: 'afternoon'})}
-                           className={`p-4 rounded-xl border font-bold text-sm transition-all ${
-                             details.deliverySlot === 'afternoon' ? 'border-primary bg-primary/5 text-primary' : 'border-black/5 text-earth/40'
-                           }`}
-                         >
-                           Afternoon (1pm—6pm)
-                         </button>
-                       </div>
-                    </div>
+                  <div className="flex items-center gap-4 mb-4">
+                    <select 
+                      value={province}
+                      onChange={e => setProvince(e.target.value)}
+                      className="bg-white/10 backdrop-blur-md border border-white/20 text-white font-bold px-4 py-2 rounded-xl focus:outline-none"
+                    >
+                      {PROVINCES.map(p => <option key={p} value={p} className="text-primary">{p}</option>)}
+                    </select>
+                    <span className="text-white/60 text-sm">Today, 3rd May</span>
+                  </div>
+                  <div className="flex items-center gap-8">
+                     <span className="text-7xl md:text-8xl font-display font-bold">24°C</span>
+                     <div className="flex flex-col">
+                        <span className="text-2xl font-bold text-secondary">Partly Cloudy</span>
+                        <div className="flex items-center gap-4 text-white/60 text-sm mt-1">
+                           <span className="flex items-center gap-1"><CloudRain size={14} /> 15% Rain</span>
+                           <span className="flex items-center gap-1"><Zap size={14} /> Low Storm Risk</span>
+                        </div>
+                     </div>
                   </div>
                </div>
-               <button 
-                 className="w-full btn-primary py-4"
-                 onClick={() => setStep(2)}
-                 disabled={!details.name || !details.address || !details.phone}
-               >
-                 Continue to Payment
-               </button>
+               
+               <div className="bg-white/10 backdrop-blur-xl border border-white/20 p-8 rounded-[2rem] text-center min-w-[200px]">
+                  <p className="text-[10px] uppercase tracking-widest font-bold text-white/60 mb-3">Planting Safety</p>
+                  <div className="w-16 h-16 bg-secondary text-primary rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-secondary/20">
+                     <Check size={32} strokeWidth={3} />
+                  </div>
+                  <h4 className="text-xl font-bold text-secondary">Safe to Plant</h4>
+                  <p className="text-xs text-white/60 mt-2">Optimal soil moisture and temperature for maize & legumes.</p>
+               </div>
             </div>
-          )}
+          </div>
 
-          {step === 2 && (
-            <div className="space-y-6">
-              <h2 className="text-2xl font-display font-bold mb-6">Payment Method</h2>
-              <div className="space-y-4">
-                {['mobile-money', 'credit-card', 'cash-on-delivery'].map(method => (
-                  <button 
-                    key={method}
-                    onClick={() => setDetails({...details, paymentMethod: method})}
-                    className={`w-full flex items-center justify-between p-6 rounded-2xl border transition-all ${
-                      details.paymentMethod === method ? 'border-primary bg-primary/5 shadow-md' : 'border-black/5'
-                    }`}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
-                        details.paymentMethod === method ? 'border-primary bg-primary' : 'border-black/10'
-                      }`}>
-                         {details.paymentMethod === method && <div className="w-2 h-2 bg-white rounded-full" />}
-                      </div>
-                      <span className={`font-bold capitalize ${details.paymentMethod === method ? 'text-primary' : 'text-earth'}`}>
-                        {method.replace(/-/g, ' ')}
-                      </span>
+          {/* 7 Day Forecast */}
+          <div className="space-y-6">
+             <h3 className="text-2xl font-display font-bold">7-Day Forecast</h3>
+             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4">
+                {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, idx) => (
+                  <div key={day} className={`p-6 rounded-3xl border text-center transition-all ${idx === 0 ? 'bg-primary text-white shadow-xl border-primary' : 'bg-white text-earth shadow-sm border-black/5'}`}>
+                    <p className={`text-xs font-bold uppercase tracking-widest mb-3 ${idx === 0 ? 'opacity-60' : 'text-earth/40'}`}>{day}</p>
+                    <div className="flex justify-center mb-4">
+                       {idx % 3 === 0 ? <CloudRain className="text-secondary" /> : <Star className="text-warm" fill="currentColor" />}
                     </div>
-                  </button>
+                    <p className="text-xl font-bold">{22 + idx}°</p>
+                    <p className={`text-[10px] font-bold mt-1 ${idx === 0 ? 'text-white/40' : 'text-earth/20'}`}>{idx * 10}% Rain</p>
+                  </div>
                 ))}
-              </div>
-              <div className="p-4 bg-background border border-black/5 rounded-2xl flex gap-3 text-sm text-earth/60">
-                <ShieldCheck className="text-primary flex-shrink-0" size={20} />
-                <p>Your transaction is secure and encrypted. We never store sensitive payment data on our servers.</p>
-              </div>
-              <div className="flex gap-4">
-                <button 
-                  className="w-1/3 btn-outline py-4"
-                  onClick={() => setStep(1)}
-                >
-                  Back
-                </button>
-                <button 
-                  className="flex-grow btn-primary py-4"
-                  onClick={() => onNext(details)}
-                >
-                  Place Order & WhatsApp Us
-                </button>
-              </div>
-            </div>
-          )}
+             </div>
+          </div>
+
+          {/* History Chart Placeholder */}
+          <div className="card p-10 bg-white shadow-xl relative overflow-hidden">
+             <h3 className="text-2xl font-display font-bold mb-8">Rainfall Trends</h3>
+             <div className="h-64 w-full flex items-end justify-between gap-2">
+                {[45, 60, 25, 80, 50, 90, 40, 70, 30, 85].map((v, i) => (
+                  <div key={i} className="flex-grow flex flex-col items-center">
+                    <motion.div 
+                      initial={{ height: 0 }}
+                      animate={{ height: `${v}%` }}
+                      transition={{ delay: i * 0.1, duration: 1 }}
+                      className="w-full bg-primary/10 rounded-t-lg relative group hover:bg-primary transition-colors cursor-help"
+                    >
+                      <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap bg-primary text-white text-[10px] font-bold px-2 py-1 rounded">
+                        {v}mm
+                      </div>
+                    </motion.div>
+                    <span className="text-[10px] text-earth/20 font-bold mt-4 uppercase tracking-tighter">Oct '25</span>
+                  </div>
+                ))}
+             </div>
+          </div>
         </div>
 
-        {/* Summary Card */}
-        <div className="card p-8 sticky top-32">
-          <h3 className="text-xl font-display font-bold mb-6">Order Summary</h3>
-          <div className="space-y-4 mb-8 max-h-[300px] overflow-y-auto pr-2 no-scrollbar">
-            {cart.map(item => (
-              <div key={item.id} className="flex justify-between items-center text-sm">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-background rounded-lg border border-black/5 flex-shrink-0">
-                    <img src={item.image} className="w-full h-full object-cover" />
-                  </div>
-                  <div>
-                    <h5 className="font-bold text-earth">{item.name}</h5>
-                    <p className="text-earth/40 text-[10px]">Qty: {item.quantity}</p>
-                  </div>
-                </div>
-                <span className="font-bold text-primary">${(item.price * item.quantity).toFixed(2)}</span>
+        {/* Sidebar Alerts */}
+        <div className="space-y-8">
+           <div className="card p-8 bg-accent text-white relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 blur-[50px] rounded-full" />
+              <div className="relative z-10">
+                 <Zap className="text-white mb-4" size={32} />
+                 <h4 className="text-xl font-bold mb-2">High Heat Warning</h4>
+                 <p className="text-sm text-white/70 mb-6">Extreme temperatures expected in Lowveld regions tomorrow. Ensure livestock have adequate water shadows.</p>
+                 <button className="w-full bg-white text-accent font-bold py-3 rounded-xl hover:scale-105 transition-all text-sm">
+                    View Details
+                 </button>
               </div>
-            ))}
-          </div>
-          
-          <div className="space-y-3 pt-6 border-t font-medium">
-             <div className="flex justify-between">
-                <span className="text-earth/60">Subtotal</span>
-                <span>${total.toFixed(2)}</span>
-             </div>
-             <div className="flex justify-between">
-                <span className="text-earth/60">Delivery</span>
-                <span className={shipping === 0 ? 'text-primary font-bold' : ''}>{shipping === 0 ? 'FREE' : `$${shipping.toFixed(2)}`}</span>
-             </div>
-             <div className="flex justify-between text-2xl font-display font-bold text-earth pt-4 border-t mt-4">
-                <span>Total</span>
-                <span className="text-primary">${grandTotal.toFixed(2)}</span>
-             </div>
-          </div>
-          <div className="mt-8 p-4 bg-secondary/10 rounded-2xl border border-secondary/20">
-             <p className="text-[10px] text-primary uppercase tracking-[0.2em] font-bold mb-1">Paddy's Freshness Guarantee</p>
-             <p className="text-xs text-primary/80">If you're not 100% happy with the quality, we'll refund or replace within 24 hours.</p>
-          </div>
+           </div>
+
+           <div className="card p-8 bg-white border border-black/5 shadow-xl">
+              <h4 className="text-lg font-bold mb-6 flex items-center gap-2">
+                <MessageCircle className="text-primary" size={20} /> Alert Service
+              </h4>
+              <p className="text-sm text-earth/60 mb-6 leading-relaxed">
+                Receive localized rain and frost alerts direct to your phone via SMS or WhatsApp. Always stay one step ahead of the weather.
+              </p>
+              <div className="space-y-3">
+                 <button className="w-full flex items-center justify-center gap-3 bg-[#25D366] text-white font-bold py-4 rounded-2xl shadow-lg hover:scale-105 transition-all active:scale-95">
+                    <MessageCircle fill="currentColor" size={20} /> WhatsApp Alerts
+                 </button>
+                 <button className="w-full flex items-center justify-center gap-3 bg-primary text-white font-bold py-4 rounded-2xl shadow-lg hover:scale-105 transition-all active:scale-95">
+                    <Smartphone size={20} /> SMS Alerts
+                 </button>
+              </div>
+           </div>
         </div>
       </div>
     </div>
   );
 };
 
-const ConfirmationView = ({ setView, details }: { setView: (v: View) => void, details: OrderDetails | null }) => {
-  return (
-    <div className="max-w-7xl mx-auto px-8 py-24 flex flex-col items-center justify-center text-center">
-       <motion.div 
-         initial={{ scale: 0 }}
-         animate={{ scale: 1 }}
-         className="w-24 h-24 bg-primary text-white rounded-[2rem] flex items-center justify-center mb-8 shadow-2xl"
-       >
-         <ShoppingBasket size={48} />
-       </motion.div>
-       <h1 className="text-5xl font-display font-bold mb-4">You're All Set, <span className="text-primary">{details?.name.split(' ')[0]}!</span></h1>
-       <p className="text-earth/60 text-lg max-w-2xl mx-auto mb-12">
-         Order <span className="text-primary font-bold">#28349</span> is being handpicked right now. 
-         We'll see you during your {details?.deliverySlot} delivery slot!
-       </p>
-       
-       <div className="flex flex-col sm:flex-row gap-4">
-         <button 
-           onClick={() => {
-             const message = encodeURIComponent(`Hi Paddy! My order #28349 is confirmed. Please let me know when it's on the way!`);
-             window.open(`https://wa.me/1234567890?text=${message}`, '_blank');
-           }}
-           className="bg-[#25D366] text-white px-8 py-4 rounded-full font-bold shadow-xl hover:scale-105 transition-all flex items-center justify-center gap-2"
-         >
-           <MessageCircle size={20} fill="currentColor" /> Chat with Paddy 
-         </button>
-         <button 
-           onClick={() => setView('home')}
-           className="btn-outline py-4 px-8"
-         >
-           Back to Home
-         </button>
-       </div>
+const Smartphone = ({ size, ...props }: any) => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    width={size} 
+    height={size} 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round" 
+    {...props}
+  >
+    <rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/>
+  </svg>
+);
 
-       <div className="mt-24 grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
-         <div className="card p-8 flex flex-col items-center">
-           <Truck className="text-primary mb-4" size={32} />
-           <h4 className="font-bold mb-2">Track Delivery</h4>
-           <p className="text-sm text-earth/40 italic">Coming Soon!</p>
+// --- Financial View ---
+
+const FinanceView = () => {
+  return (
+    <div className="max-w-7xl mx-auto px-4 md:px-8 py-12">
+      <div className="max-w-3xl mx-auto text-center mb-16">
+        <h1 className="text-4xl md:text-6xl font-display font-bold mb-6">Your Farm. Your Future. <span className="text-primary">Funded.</span></h1>
+        <p className="text-lg text-earth/60 leading-relaxed">
+          Access specialized loans, insurance, and price protection programs designed for Zimbabwe's agricultural cycles.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-24">
+        {[
+          { icon: Zap, title: 'Input Loans', desc: 'Seasonal credit for seeds & fertiliser. Repay after harvest.', color: 'bg-primary' },
+          { icon: CloudRain, title: 'Crop Insurance', desc: 'Weather-indexed coverage against drought or flooding.', color: 'bg-accent' },
+          { icon: Truck, title: 'Asset Finance', desc: 'Funding for irrigation, tractors, and processing equipment.', color: 'bg-secondary' },
+          { icon: ShieldCheck, title: 'Market Guarantee', desc: 'Lock in minimum prices before you even plant.', color: 'bg-primary-light' },
+          { icon: Users, title: 'Savings Groups', desc: 'Digital ROSCA tool for village community savings.', color: 'bg-warm' },
+          { icon: HelpCircle, title: 'Custom Funding', desc: 'Talk to an advisor about your unique farm venture.', color: 'bg-earth' }
+        ].map((item, idx) => (
+          <div key={idx} className="card p-10 bg-white group hover:shadow-2xl transition-all border-b-4 border-b-transparent hover:border-b-primary">
+            <div className={`w-14 h-14 ${item.color} rounded-2xl flex items-center justify-center text-white mb-8 shadow-xl rotate-3 group-hover:rotate-0 transition-transform`}>
+              <item.icon size={28} />
+            </div>
+            <h3 className="text-2xl font-bold mb-4">{item.title}</h3>
+            <p className="text-earth/50 text-base leading-relaxed mb-10">{item.desc}</p>
+            <button className="w-full btn-outline flex items-center justify-center gap-2 group">
+              Apply Now <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
+            </button>
+          </div>
+        ))}
+      </div>
+
+      {/* Partner Strip */}
+      <div className="py-20 border-t border-black/5 text-center">
+         <p className="text-[10px] uppercase tracking-[0.3em] font-bold text-earth/20 mb-12">Our Verified Partners</p>
+         <div className="flex flex-wrap justify-center items-center gap-12 md:gap-24 opacity-30 grayscale">
+            <span className="text-2xl font-black italic">CBZ AGRI</span>
+            <span className="text-2xl font-black italic">AGRIBANK</span>
+            <span className="text-2xl font-black italic">OLD MUTUAL</span>
+            <span className="text-2xl font-black italic">FSD ZIM</span>
+            <span className="text-2xl font-black italic">RBZ REGULATED</span>
          </div>
-         <div className="card p-8 flex flex-col items-center">
-           <Phone className="text-primary mb-4" size={32} />
-           <h4 className="font-bold mb-2">Need Help?</h4>
-           <p className="text-sm text-earth/40">Call us anytime on 0800 PADDY</p>
-         </div>
-         <div className="card p-8 flex flex-col items-center">
-           <Leaf className="text-primary mb-4" size={32} />
-           <h4 className="font-bold mb-2">Zero Waste</h4>
-           <p className="text-sm text-earth/40 text-center">Remember to leave your old boxes out for us to collect!</p>
-         </div>
-       </div>
+      </div>
     </div>
   );
+};
+
+// --- Footer ---
+
+const Footer = ({ setView }: { setView: (v: View) => void }) => {
+  return (
+    <footer className="bg-earth text-white/90 pt-24 pb-12 overflow-hidden relative">
+      <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 blur-[150px] rounded-full" />
+      
+      <div className="max-w-7xl mx-auto px-8 relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 mb-24">
+          <div className="space-y-8">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-secondary">
+                <Award size={24} />
+              </div>
+              <span className="text-2xl font-bold font-display tracking-tight">AgriZim</span>
+            </div>
+            <p className="text-sm text-white/50 leading-relaxed font-medium">
+              Empowering Zimbabwe's farmers with data, markets, and capital. Hand-built for the community.
+            </p>
+            <div className="flex gap-4">
+              {['Facebook', 'WhatsApp', 'Twitter'].map(s => (
+                <div key={s} className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/10 hover:bg-secondary hover:text-primary transition-all cursor-pointer">
+                   {s === 'WhatsApp' ? <MessageCircle size={18} /> : <span>{s[0]}</span>}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-8">
+            <h4 className="text-white font-bold text-lg">Services</h4>
+            <ul className="space-y-4 text-sm text-white/40">
+              <li className="hover:text-secondary cursor-pointer" onClick={() => setView('marketplace')}>Produce Marketplace</li>
+              <li className="hover:text-secondary cursor-pointer" onClick={() => setView('shop')}>Farm Inputs e-Shop</li>
+              <li className="hover:text-secondary cursor-pointer" onClick={() => setView('weather')}>Seasonal Planner</li>
+              <li className="hover:text-secondary cursor-pointer" onClick={() => setView('finance')}>Agri-Finance Hub</li>
+            </ul>
+          </div>
+
+          <div className="space-y-8">
+            <h4 className="text-white font-bold text-lg">Quick Access</h4>
+            <ul className="space-y-4 text-sm text-white/40">
+              <li className="hover:text-secondary cursor-pointer" onClick={() => setView('knowledge')}>Knowledge Centre</li>
+              <li className="hover:text-secondary cursor-pointer" onClick={() => setView('community')}>Farmer Forum</li>
+              <li className="hover:text-secondary cursor-pointer" onClick={() => setView('programs')}>Govt Programs</li>
+              <li className="hover:text-secondary cursor-pointer">Agritex Support</li>
+            </ul>
+          </div>
+
+          <div className="space-y-8">
+            <h4 className="text-white font-bold text-lg">Contact Us</h4>
+            <div className="space-y-6">
+              <div className="flex items-start gap-4">
+                <div className="p-3 bg-white/5 rounded-xl text-secondary"><Phone size={18} /></div>
+                <div>
+                  <p className="text-xs uppercase tracking-widest font-bold text-white/30 mb-1">Call Centre</p>
+                  <span className="text-sm font-bold">0808 123 4567 (Toll Free)</span>
+                </div>
+              </div>
+              <div className="flex items-start gap-4">
+                <div className="p-3 bg-white/5 rounded-xl text-secondary"><MapPin size={18} /></div>
+                <div>
+                  <p className="text-xs uppercase tracking-widest font-bold text-white/30 mb-1">Harare Office</p>
+                  <span className="text-sm font-bold leading-relaxed px-5 py-2 hover:text-secondary cursor-pointer">12nd Floor, Travel Centre, Jason Moyo Ave</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="pt-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6 text-[10px] uppercase tracking-[0.3em] font-bold text-white/20">
+          <p>© 2026 AGRIZIM PLATFORM</p>
+          <div className="flex gap-8">
+            <span className="hover:text-white transition-colors cursor-pointer">Privacy Policy</span>
+            <span className="hover:text-white transition-colors cursor-pointer">Terms of Service</span>
+            <span className="hover:text-white transition-colors cursor-pointer">Agritex Partnership</span>
+          </div>
+          <p>BUILT FOR THE ZIMBABWEAN HARVEST</p>
+        </div>
+      </div>
+    </footer>
+  );
+};
+
+// --- Knowledge Centre ---
+
+const KnowledgeCentreView = () => {
+    return (
+        <div className="max-w-7xl mx-auto px-4 md:px-8 py-12">
+            <div className="flex flex-col md:flex-row justify-between items-end gap-10 mb-16">
+                <div className="max-w-xl">
+                    <h1 className="text-4xl md:text-5xl font-display font-bold mb-4">Knowledge Centre</h1>
+                    <p className="text-earth/60">Learn from Zimbabwe's top agronomists. Modern techniques for ancient soil.</p>
+                </div>
+                <div className="relative w-full md:w-96">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-earth/20" size={20} />
+                    <input 
+                      type="text" 
+                      placeholder="What do you want to grow?" 
+                      className="w-full bg-white border border-black/5 rounded-2xl pl-12 pr-6 py-4 focus:ring-2 focus:ring-primary/20 outline-none shadow-sm"
+                    />
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {GUIDES.map(guide => (
+                    <div key={guide.id} className="card group cursor-pointer hover:shadow-2xl transition-all">
+                        <div className="relative aspect-video overflow-hidden">
+                            <img src={guide.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                            <div className="absolute top-4 left-4 bg-primary text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">
+                                {guide.category}
+                            </div>
+                        </div>
+                        <div className="p-8">
+                            <h4 className="text-xl font-bold mb-3 group-hover:text-primary transition-colors">{guide.title}</h4>
+                            <p className="text-earth/60 text-sm mb-8 leading-relaxed line-clamp-2">{guide.summary}</p>
+                            <div className="flex items-center justify-between text-[10px] uppercase tracking-widest font-bold text-earth/30">
+                                <span>{guide.readTime} Read</span>
+                                <button className="flex items-center gap-2 text-primary group-hover:gap-3 transition-all">
+                                    Read Article <ArrowRight size={14} />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Offline CTA */}
+            <div className="mt-24 p-12 bg-primary/5 rounded-[3rem] border border-primary/10 flex flex-col md:flex-row items-center justify-between gap-12">
+                <div className="max-w-lg">
+                    <h3 className="text-3xl font-display font-bold mb-4">Agritex Extension Support</h3>
+                    <p className="text-earth/60 mb-1">Need specific advice for your plot? Chat with a verified agronomist directly on WhatsApp.</p>
+                    <p className="text-xs text-primary font-bold uppercase tracking-widest">Response within 2 hours · Available Mon-Fri</p>
+                </div>
+                <button className="bg-[#25D366] text-white px-10 py-5 rounded-full font-bold shadow-2xl flex items-center gap-3 hover:scale-105 transition-all">
+                    <MessageCircle size={24} fill="currentColor" /> Ask an Agronomist
+                </button>
+            </div>
+        </div>
+    );
 };
 
 // --- Main App Component ---
 
 export default function App() {
   const [currentView, setCurrentView] = useState<View>('home');
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const [isCartOpen, setIsCartOpen] = useState(false);
-  const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
-  const [lastAdded, setLastAdded] = useState<string | null>(null);
+  const [lang, setLang] = useState<Language>('EN');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  const addToCart = (product: Product) => {
-    setCart(prev => {
-      const existing = prev.find(item => item.id === product.id);
-      if (existing) {
-        return prev.map(item => 
-          item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
-        );
-      }
-      return [...prev, { ...product, quantity: 1 }];
-    });
-    
-    // Trigger feedback instead of opening drawer
-    setLastAdded(product.name);
-    setTimeout(() => setLastAdded(null), 3000);
-  };
-
-  const updateQuantity = (id: string, delta: number) => {
-    setCart(prev => prev.map(item => 
-      item.id === id ? { ...item, quantity: Math.max(1, item.quantity + delta) } : item
-    ));
-  };
-
-  const removeFromCart = (id: string) => {
-    setCart(prev => prev.filter(item => item.id !== id));
-  };
-
-  const handleCheckout = () => {
-    setIsCartOpen(false);
-    setCurrentView('checkout');
+  useEffect(() => {
     window.scrollTo(0, 0);
-  };
-
-  const handlePlaceOrder = (details: OrderDetails) => {
-    setOrderDetails(details);
-    setCurrentView('confirmation');
-    setCart([]); // Clear cart after order
-    window.scrollTo(0, 0);
-  };
-
-  // WhatsApp Button Component
-  const WhatsAppButton = () => (
-    <motion.button 
-      initial={{ scale: 0, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      whileHover={{ scale: 1.1 }}
-      whileTap={{ scale: 0.9 }}
-      onClick={() => window.open('https://wa.me/1234567890', '_blank')}
-      className="fixed bottom-6 right-6 z-40 w-16 h-16 bg-[#25D366] text-white rounded-full flex items-center justify-center shadow-2xl overflow-hidden group"
-    >
-      <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-      <MessageCircle size={32} fill="currentColor" />
-    </motion.button>
-  );
+  }, [currentView]);
 
   return (
-    <div className="min-h-screen flex flex-col selection:bg-primary/20 bg-background">
+    <div className="min-h-screen flex flex-col bg-background font-sans selection:bg-primary/10 selection:text-primary">
+      <AnnouncementBar />
       <Navbar 
-        cartCount={cart.reduce((acc, item) => acc + item.quantity, 0)} 
-        setView={v => { setCurrentView(v); window.scrollTo(0,0); }} 
-        toggleCart={() => setIsCartOpen(!isCartOpen)}
-        currentView={currentView}
-        lastAdded={lastAdded}
+        currentView={currentView} 
+        setView={setCurrentView} 
+        lang={lang} 
+        setLang={setLang}
+        isLoggedIn={isLoggedIn}
+        onJoin={() => setCurrentView('register')}
       />
 
-      <main className="flex-grow pt-4 pb-20">
+      <main className="flex-grow">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentView}
@@ -1223,100 +862,38 @@ export default function App() {
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.3 }}
           >
-            {currentView === 'home' && <HomeView setView={setCurrentView} onAddToCart={addToCart} />}
-            {currentView === 'shop' && <ShopView setView={setCurrentView} onAddToCart={addToCart} />}
-            {currentView === 'specials' && <SpecialsView onAddToCart={addToCart} />}
-            {currentView === 'about' && <AboutView setView={setCurrentView} />}
-            {currentView === 'checkout' && (
-              <CheckoutView 
-                cart={cart} 
-                onBack={() => setCurrentView('shop')} 
-                onNext={handlePlaceOrder}
-              />
-            )}
-            {currentView === 'confirmation' && <ConfirmationView setView={setCurrentView} details={orderDetails} />}
+            {currentView === 'home' && <HomeView setView={setCurrentView} lang={lang} />}
+            {currentView === 'marketplace' && <MarketplaceView onPost={() => {}} />}
+            {currentView === 'shop' && <InputsView />}
+            {currentView === 'knowledge' && <KnowledgeCentreView />}
+            {currentView === 'weather' && <WeatherView />}
+            {currentView === 'finance' && <FinanceView />}
             
+            {(['register', 'profile', 'community', 'programs'].includes(currentView)) && (
+                <div className="max-w-4xl mx-auto px-8 py-24 text-center">
+                    <div className="w-20 h-20 bg-primary/5 rounded-3xl flex items-center justify-center text-primary mx-auto mb-8">
+                        <Zap size={40} />
+                    </div>
+                    <h1 className="text-4xl font-display font-bold mb-4 uppercase tracking-tighter">Under Cultivation</h1>
+                    <p className="text-earth/50 text-lg mb-12">The <span className="text-primary font-bold">{currentView}</span> module is being hand-planted by our devs. Check back soon for the harvest!</p>
+                    <button onClick={() => setCurrentView('home')} className="btn-primary">Return Home</button>
+                </div>
+            )}
           </motion.div>
         </AnimatePresence>
       </main>
 
-      <footer className="bg-earth text-white/90 pt-20 pb-10">
-        <div className="max-w-7xl mx-auto px-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
-          <div className="space-y-6">
-            <div className="flex items-center gap-3">
-              <Leaf className="text-secondary" />
-              <span className="text-2xl font-bold font-display">Paddy's</span>
-            </div>
-            <p className="text-sm text-white/50 leading-relaxed">
-              Bringing the local market experience to your digital storefront. Family owned and operated since 1994.
-            </p>
-            <div className="flex gap-4">
-              {['Facebook', 'Instagram', 'WhatsApp'].map(social => (
-                <div key={social} className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-secondary hover:text-primary transition-all cursor-pointer">
-                  <span className="sr-only">{social}</span>
-                  {social === 'Facebook' && <span className="font-bold">f</span>}
-                  {social === 'Instagram' && <span className="font-bold">i</span>}
-                  {social === 'WhatsApp' && <MessageCircle size={18} />}
-                </div>
-              ))}
-            </div>
+      <Footer setView={setCurrentView} />
+      
+      {/* WhatsApp Button */}
+      <div className="fixed bottom-8 left-8 z-50 hidden md:block">
+        <button className="bg-[#25D366] text-white p-4 rounded-full shadow-2xl hover:scale-110 active:scale-95 transition-all group relative">
+          <MessageCircle size={28} fill="currentColor" />
+          <div className="absolute left-full ml-4 top-1/2 -translate-y-1/2 bg-white text-earth font-bold text-xs py-2 px-4 rounded-xl shadow-xl border border-black/5 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+            How can we help you today?
           </div>
-
-          <div>
-             <h4 className="text-white font-bold mb-6">Explore</h4>
-             <ul className="space-y-4 text-sm text-white/50">
-               <li className="hover:text-secondary cursor-pointer" onClick={() => setCurrentView('shop')}>Daily Harvest</li>
-               <li className="hover:text-secondary cursor-pointer" onClick={() => setCurrentView('specials')}>Seasonal Boxes</li>
-               <li className="hover:text-secondary cursor-pointer">Recipes</li>
-               <li className="hover:text-secondary cursor-pointer">Delivery Areas</li>
-             </ul>
-          </div>
-
-          <div>
-             <h4 className="text-white font-bold mb-6">Information</h4>
-             <ul className="space-y-4 text-sm text-white/50">
-               <li className="hover:text-secondary cursor-pointer" onClick={() => setCurrentView('about')}>Our Story</li>
-               <li className="hover:text-secondary cursor-pointer">Privacy Policy</li>
-               <li className="hover:text-secondary cursor-pointer">Terms of Service</li>
-               <li className="hover:text-secondary cursor-pointer">FAQs</li>
-             </ul>
-          </div>
-
-          <div className="space-y-6">
-             <h4 className="text-white font-bold mb-6">Contact Us</h4>
-             <div className="flex items-center gap-3">
-               <Phone size={18} className="text-secondary" />
-               <span className="text-sm">0800 PADDY (72339)</span>
-             </div>
-             <div className="flex items-center gap-3">
-               <MapPin size={18} className="text-secondary" />
-               <span className="text-sm">123 Harvest Road, Freshville</span>
-             </div>
-             <div className="flex items-center gap-3 text-sm">
-               <Clock size={18} className="text-secondary" />
-               <div>
-                 <p>Mon—Fri: 7am—7pm</p>
-                 <p className="opacity-50">Sat: 8am—4pm</p>
-               </div>
-             </div>
-          </div>
-        </div>
-        <div className="max-w-7xl mx-auto px-8 pt-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] uppercase tracking-widest font-bold text-white/20">
-           <p>© 2024 Paddy's Fruit & Veg</p>
-           <p>Hand-built for the Community</p>
-        </div>
-      </footer>
-
-      <CartDrawer 
-        isOpen={isCartOpen} 
-        onClose={() => setIsCartOpen(false)} 
-        items={cart}
-        onUpdateQuantity={updateQuantity}
-        onRemove={removeFromCart}
-        onCheckout={handleCheckout}
-      />
-
-      <WhatsAppButton />
+        </button>
+      </div>
     </div>
   );
 }

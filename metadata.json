@@ -1,6 +1,6 @@
 {
-  "name": "Paddy's Fruit & Veg",
-  "description": "High-quality, farm-fresh fruit and vegetables delivered from our local family-run shop to your door.",
+  "name": "AgriZim",
+  "description": "The digital home for Zimbabwe's farmers. Access markets, inputs, weather alerts, and financial services in one place.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["ecommerce", "mobile-money-integration", "whatsapp-ordering"]
+  "majorCapabilities": ["marketplace", "weather-integration", "ag-fintech"]
 }
